@@ -4,6 +4,8 @@ import com.pragma.bootcamps.bootcamp.domain.models.Bootcamp;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
+
 public interface BootcampPersistencePort {
 
     Mono<Bootcamp> saveBootcamp(Bootcamp bootcamp);
@@ -11,5 +13,6 @@ public interface BootcampPersistencePort {
     Mono<Bootcamp> findBootcampByName(String name);
     Mono<Bootcamp> findBootcampById(Long bootcampId);
     Flux<Bootcamp> findBootcampsPagedAndSorted(int page, int size, String sortBy, String order);
+    Flux<Bootcamp> findAllByIds(List<Long> bootcampIds);
 
 }

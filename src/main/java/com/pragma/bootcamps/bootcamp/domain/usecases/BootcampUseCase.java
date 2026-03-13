@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import static com.pragma.bootcamps.bootcamp.domain.constants.BootcampConstants.MAX_CAPS;
@@ -80,6 +81,25 @@ public class BootcampUseCase implements BootcampServicePort {
                                         ExceptionMessages.SAGA_COMPENSATION_ASSOCIATION_FAILURE.getMessage()))
                                 ))
                 );
+    }
+
+    public Mono<Boolean> validateConflicts(Long newBootcampId, List<Long> enrolledBootcampIds) {
+        return bootcampPersistencePort.findBootcampById(newBootcampId)
+                .switchIfEmpty(Mono.error(new NotFoundException(ExceptionMessages.BOOTCAMP_NOT_FOUND.format(newBootcampId))))
+                .flatMap(candidateBootcamp ->
+                        bootcampPersistencePort.findAllByIds(enrolledBootcampIds)
+                                .any(enrolledBootcamp -> hasScheduleConflict(candidateBootcamp, enrolledBootcamp))
+                )
+                .map(hasConflict -> !hasConflict);
+    }
+
+    private static boolean hasScheduleConflict(Bootcamp candidate, Bootcamp enrolled) {
+        return candidate.getReleaseDate().isBefore(calculateEndDate(enrolled))
+                && calculateEndDate(candidate).isAfter(enrolled.getReleaseDate());
+    }
+
+    private static LocalDate calculateEndDate(Bootcamp bootcamp) {
+        return bootcamp.getReleaseDate().plusDays(bootcamp.getDuration());
     }
 
     private static boolean isValidCapabilitiesCount(List<Long> capabilityIds, int min, int max) {
