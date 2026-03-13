@@ -2,12 +2,11 @@ spring:
   application:
     name: bootcamp
 
-  spring:
-    rabbitmq:
-      host: localhost
-      port: 5672
-      username: bootcamp
-      password: "1234"
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: bootcamp
+    password: "1234"
 
   r2dbc:
     url: r2dbc:postgresql://localhost:5434/bootcamp
