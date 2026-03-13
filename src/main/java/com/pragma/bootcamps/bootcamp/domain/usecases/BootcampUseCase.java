@@ -2,25 +2,31 @@ package com.pragma.bootcamps.bootcamp.domain.usecases;
 
 import com.pragma.bootcamps.bootcamp.domain.api.BootcampServicePort;
 import com.pragma.bootcamps.bootcamp.domain.clients.CapabilityAssociationClientPort;
+import com.pragma.bootcamps.bootcamp.domain.clients.TechnologyClientPort;
 import com.pragma.bootcamps.bootcamp.domain.enums.ExceptionMessages;
 import com.pragma.bootcamps.bootcamp.domain.exceptions.BootcampAlreadyExistsException;
 import com.pragma.bootcamps.bootcamp.domain.exceptions.BootcampCapabilitiesCountException;
 import com.pragma.bootcamps.bootcamp.domain.exceptions.SagaCompensationException;
 import com.pragma.bootcamps.bootcamp.domain.models.Bootcamp;
+import com.pragma.bootcamps.bootcamp.domain.models.BootcampWithCapabilities;
 import com.pragma.bootcamps.bootcamp.domain.spi.BootcampPersistencePort;
 import lombok.RequiredArgsConstructor;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
 
 import static com.pragma.bootcamps.bootcamp.domain.constants.BootcampConstants.MAX_CAPS;
 import static com.pragma.bootcamps.bootcamp.domain.constants.BootcampConstants.MIN_CAPS;
+import static com.pragma.bootcamps.bootcamp.domain.utils.BootcampUtils.buildBootcampWithCapabilities;
+import static com.pragma.bootcamps.bootcamp.domain.utils.BootcampUtils.buildCapabilitySummaryWithTechnologies;
 
 @RequiredArgsConstructor
 public class BootcampUseCase implements BootcampServicePort {
 
     private final BootcampPersistencePort bootcampPersistencePort;
     private final CapabilityAssociationClientPort capabilityAssociationClientPort;
+    private final TechnologyClientPort technologyClientPort;
 
     public Mono<Bootcamp> saveBootcamp(Bootcamp bootcamp) {
         bootcamp.setCapabilityCount(bootcamp.getCapabilityIds().size());
@@ -33,6 +39,18 @@ public class BootcampUseCase implements BootcampServicePort {
                         ExceptionMessages.BOOTCAMP_CAPABILITIES_REPEATED.getMessage())))
                 .flatMap(this::validateUniqueName)
                 .flatMap(this::saveAndAssociateCapabilities);
+    }
+
+    public Flux<BootcampWithCapabilities> getBootcampsWithCapabilities(int page, int size, String sortBy, String order) {
+        return bootcampPersistencePort.findBootcampsPagedAndSorted(page, size, sortBy, order)
+                .flatMapSequential(bootcamp -> capabilityAssociationClientPort.getCapabilitiesByBootcampId(bootcamp.getId())
+                        .flatMapSequential(capability -> technologyClientPort.getTechnologiesByCapabilityId(capability.getId())
+                                .collectList()
+                                .map(technologies -> buildCapabilitySummaryWithTechnologies(capability, technologies))
+                        )
+                        .collectList()
+                        .map(capabilities -> buildBootcampWithCapabilities(bootcamp, capabilities))
+                );
     }
 
     private Mono<Bootcamp> validateUniqueName(Bootcamp bootcamp) {
