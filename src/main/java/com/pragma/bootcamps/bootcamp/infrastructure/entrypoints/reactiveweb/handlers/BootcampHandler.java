@@ -1,7 +1,7 @@
 package com.pragma.bootcamps.bootcamp.infrastructure.entrypoints.reactiveweb.handlers;
 
+import com.pragma.bootcamps.bootcamp.domain.api.BootcampServicePort;
 import com.pragma.bootcamps.bootcamp.domain.enums.ExceptionStatusCode;
-import com.pragma.bootcamps.bootcamp.domain.spi.BootcampPersistencePort;
 import com.pragma.bootcamps.bootcamp.infrastructure.entrypoints.reactiveweb.dtos.requests.BootcampRequest;
 import com.pragma.bootcamps.bootcamp.infrastructure.entrypoints.reactiveweb.mappers.BootcampDtoMapper;
 import com.pragma.bootcamps.bootcamp.infrastructure.entrypoints.reactiveweb.utils.HandlersResponseUtil;
@@ -19,7 +19,7 @@ import java.net.URI;
 @RequiredArgsConstructor
 public class BootcampHandler {
 
-    private final BootcampPersistencePort bootcampPersistencePort;
+    private final BootcampServicePort bootcampServicePort;
     private final BootcampDtoMapper mapper;
     private final ValidatorUtil validatorUtil;
 
@@ -27,7 +27,7 @@ public class BootcampHandler {
         return serverRequest.bodyToMono(BootcampRequest.class)
                 .flatMap(validatorUtil::validate)
                 .map(mapper::toModel)
-                .flatMap(bootcampPersistencePort::saveBootcamp)
+                .flatMap(bootcampServicePort::saveBootcamp)
                 .map(mapper::toResponse)
                 .flatMap(savedBootcamp -> ServerResponse.created(URI.create(""))
                         .contentType(MediaType.APPLICATION_JSON)

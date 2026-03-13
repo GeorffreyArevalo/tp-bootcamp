@@ -18,7 +18,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CapabilityMicroserviceClientAdapter implements CapabilityAssociationClientPort {
 
-    private static final String ASSOCIATE_CAPABILITIES_URL = "/api/v1/capabilities/bootcamp-associations";
+    private static final String ASSOCIATE_CAPABILITIES_URL = "/capabilities/bootcamp-associations";
 
     @Value("${adapter.clients.clients.capability.base-url}")
     private String technologyMicroserviceBaseUrl;
@@ -27,7 +27,7 @@ public class CapabilityMicroserviceClientAdapter implements CapabilityAssociatio
 
     public Mono<Void> associateCapabilities(Long bootcampId, List<Long> capabilityIds) {
         return client.post()
-                .uri(String.format("%s/%s", technologyMicroserviceBaseUrl,  ASSOCIATE_CAPABILITIES_URL))
+                .uri(String.format("%s%s", technologyMicroserviceBaseUrl,  ASSOCIATE_CAPABILITIES_URL))
                 .bodyValue(new AssociationRequest(bootcampId, capabilityIds))
                 .retrieve()
                 .onStatus(status -> status.value() == 400, response ->

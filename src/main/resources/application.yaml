@@ -14,6 +14,12 @@ spring:
     user: postgres
     password: 1234
 
+springdoc:
+  swagger-ui:
+    path: "/api/doc/bootcamp/swagger-ui.html"
+  api-docs:
+    path: "/api/doc/bootcamp/api-docs"
+
 server:
   port: 8082
 

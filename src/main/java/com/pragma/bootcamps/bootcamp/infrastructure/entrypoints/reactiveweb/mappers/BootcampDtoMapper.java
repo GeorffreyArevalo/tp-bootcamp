@@ -13,7 +13,7 @@ import org.mapstruct.ReportingPolicy;
 )
 public interface BootcampDtoMapper {
 
-    Bootcamp toModel(BootcampRequest bootcampRequestDto);
+    Bootcamp toModel(BootcampRequest bootcampRequest);
     BootcampResponse toResponse(Bootcamp bootcamp);
 
 }
