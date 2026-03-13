@@ -77,6 +77,7 @@ public class BootcampUseCase implements BootcampServicePort {
         return bootcampPersistencePort.saveBootcamp(bootcamp)
                 .flatMap(savedBootcamp -> capabilityAssociationClientPort
                         .associateCapabilities(savedBootcamp.getId(), capabilityIds)
+                        .doOnSuccess(unused -> notifyBootcampCreation(savedBootcamp))
                         .thenReturn(savedBootcamp)
                         .onErrorResume(e -> bootcampPersistencePort.deleteBootcamp(savedBootcamp.getId())
                                 .then(Mono.error(new SagaCompensationException(
