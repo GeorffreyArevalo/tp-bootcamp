@@ -39,6 +39,12 @@ public class BootcampPersistenceAdapter implements BootcampPersistencePort {
     }
 
     @Override
+    public Mono<Bootcamp> findBootcampById(Long bootcampId) {
+        return bootcampReactiveRepository.findById(bootcampId)
+                .map(mapper::toDomain);
+    }
+
+    @Override
     public Flux<Bootcamp> findBootcampsPagedAndSorted(int page, int size, String sortBy, String order) {
         return Mono.just(order)
                 .map(ord -> ord.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC)
