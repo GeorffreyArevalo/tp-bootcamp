@@ -19,7 +19,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class TechnologyMicroserviceClientAdapter implements TechnologyClientPort {
 
-    private static final String GET_TECHNOLOGIES_URL = "/technology/capabilities/{capabilityId}/technologies";
+    private static final String GET_TECHNOLOGIES_URL = "/tech/capabilities/{capabilityId}/techs";
 
     @Value("${adapter.clients.clients.tech.base-url}")
     private String technologyMicroserviceBaseUrl;
