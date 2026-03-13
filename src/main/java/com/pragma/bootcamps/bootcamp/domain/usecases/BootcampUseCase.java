@@ -10,18 +10,19 @@ import com.pragma.bootcamps.bootcamp.domain.exceptions.NotFoundException;
 import com.pragma.bootcamps.bootcamp.domain.exceptions.SagaCompensationException;
 import com.pragma.bootcamps.bootcamp.domain.models.Bootcamp;
 import com.pragma.bootcamps.bootcamp.domain.models.BootcampWithCapabilities;
+import com.pragma.bootcamps.bootcamp.domain.queue.port.QueuePublisher;
 import com.pragma.bootcamps.bootcamp.domain.spi.BootcampPersistencePort;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.time.LocalDate;
 import java.util.List;
 
 import static com.pragma.bootcamps.bootcamp.domain.constants.BootcampConstants.MAX_CAPS;
 import static com.pragma.bootcamps.bootcamp.domain.constants.BootcampConstants.MIN_CAPS;
-import static com.pragma.bootcamps.bootcamp.domain.utils.BootcampUtils.buildBootcampWithCapabilities;
-import static com.pragma.bootcamps.bootcamp.domain.utils.BootcampUtils.buildCapabilitySummaryWithTechnologies;
+import static com.pragma.bootcamps.bootcamp.domain.utils.BootcampUtils.*;
 
 @RequiredArgsConstructor
 public class BootcampUseCase implements BootcampServicePort {
@@ -29,6 +30,7 @@ public class BootcampUseCase implements BootcampServicePort {
     private final BootcampPersistencePort bootcampPersistencePort;
     private final CapabilityAssociationClientPort capabilityAssociationClientPort;
     private final TechnologyClientPort technologyClientPort;
+    private final QueuePublisher queuePublisher;
 
     public Mono<Bootcamp> saveBootcamp(Bootcamp bootcamp) {
         bootcamp.setCapabilityCount(bootcamp.getCapabilityIds().size());
@@ -93,20 +95,26 @@ public class BootcampUseCase implements BootcampServicePort {
                 .map(hasConflict -> !hasConflict);
     }
 
-    private static boolean hasScheduleConflict(Bootcamp candidate, Bootcamp enrolled) {
+    private void notifyBootcampCreation(Bootcamp bootcamp) {
+        queuePublisher.sendBootcampReportMessage(buildBootcampMessage(bootcamp))
+                .subscribeOn(Schedulers.boundedElastic())
+                .subscribe();
+    }
+
+    private boolean hasScheduleConflict(Bootcamp candidate, Bootcamp enrolled) {
         return candidate.getReleaseDate().isBefore(calculateEndDate(enrolled))
                 && calculateEndDate(candidate).isAfter(enrolled.getReleaseDate());
     }
 
-    private static LocalDate calculateEndDate(Bootcamp bootcamp) {
+    private LocalDate calculateEndDate(Bootcamp bootcamp) {
         return bootcamp.getReleaseDate().plusDays(bootcamp.getDuration());
     }
 
-    private static boolean isValidCapabilitiesCount(List<Long> capabilityIds, int min, int max) {
+    private boolean isValidCapabilitiesCount(List<Long> capabilityIds, int min, int max) {
         return capabilityIds != null && capabilityIds.size() >= min && capabilityIds.size() <= max;
     }
 
-    private static boolean hasNoRepeatedCapabilities(List<Long> capabilityIds) {
+    private boolean hasNoRepeatedCapabilities(List<Long> capabilityIds) {
         return capabilityIds != null && capabilityIds.stream().distinct().count() == capabilityIds.size();
     }
 }

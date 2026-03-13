@@ -13,5 +13,6 @@ public interface BootcampServicePort {
     Flux<BootcampWithCapabilities> getBootcampsWithCapabilities(int page, int size, String sortBy, String order);
     Mono<Void> deleteBootcamp(Long bootcampId);
     Mono<Boolean> validateConflicts(Long newBootcampId, List<Long> enrolledBootcampIds);
+    void notifyBootcampCreation(Bootcamp bootcamp);
 
 }
