@@ -25,6 +25,7 @@ public class CapabilityMicroserviceClientAdapter implements CapabilityAssociatio
 
     private static final String ASSOCIATE_CAPABILITIES_URL = "/capabilities/bootcamp-associations";
     private static final String GET_CAPABILITIES_URL = "/capability/botcamps/{bootcampId}/capabilities";
+    private static final String DELETE_BOOTCAMP_URL = "/capability/bootcamps/{bootcampId}";
 
     @Value("${adapter.clients.clients.capability.base-url}")
     private String capabilityMicroserviceBaseUrl;
@@ -67,6 +68,22 @@ public class CapabilityMicroserviceClientAdapter implements CapabilityAssociatio
                 )
                 .bodyToMono(CapabilityListResponse.class)
                 .flatMapMany(response -> Flux.fromIterable(response.data() != null ? response.data() : List.of()));
+    }
+
+    @Override
+    public Mono<Void> deleteAssociatedDataByBootcampId(Long bootcampId) {
+        return client.delete()
+                .uri(String.format("%s%s", capabilityMicroserviceBaseUrl, DELETE_BOOTCAMP_URL), bootcampId)
+                .retrieve()
+                .onStatus(HttpStatusCode::is5xxServerError, response ->
+                        response.bodyToMono(String.class).flatMap(body ->
+                                Mono.error(new CapabilityMicroserviceException(
+                                        ExceptionMessages.WEB_CLIENT_INTERNAL_SERVER_ERROR.format(body)
+                                ))
+                        )
+                )
+                .toBodilessEntity()
+                .then();
     }
 
 
