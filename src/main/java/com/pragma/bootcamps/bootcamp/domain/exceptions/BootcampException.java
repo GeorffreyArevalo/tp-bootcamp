@@ -1,7 +1,9 @@
 package com.pragma.bootcamps.bootcamp.domain.exceptions;
 
 import com.pragma.bootcamps.bootcamp.domain.enums.ExceptionStatusCode;
+import lombok.Getter;
 
+@Getter
 public class BootcampException extends RuntimeException {
 
     private final ExceptionStatusCode statusCode;
