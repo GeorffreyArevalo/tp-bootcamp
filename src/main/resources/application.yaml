@@ -26,6 +26,7 @@ server:
 routes:
   paths:
     bootcamps: "/api/v1/bootcamps"
+    bootcamps-list: "/api/v1/bootcamps/list"
 
 adapter:
   clients:
@@ -33,3 +34,5 @@ adapter:
     clients:
       capability:
         base-url: "http://localhost:8081/api/v1"
+      tech:
+        base-url: "http://localhost:8080/api/v1"
