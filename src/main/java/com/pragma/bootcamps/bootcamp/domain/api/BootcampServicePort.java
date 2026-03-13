@@ -9,5 +9,6 @@ public interface BootcampServicePort {
 
     Mono<Bootcamp> saveBootcamp(Bootcamp bootcamp);
     Flux<BootcampWithCapabilities> getBootcampsWithCapabilities(int page, int size, String sortBy, String order);
+    Mono<Void> deleteBootcamp(Long bootcampId);
 
 }

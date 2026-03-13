@@ -6,6 +6,7 @@ import com.pragma.bootcamps.bootcamp.domain.clients.TechnologyClientPort;
 import com.pragma.bootcamps.bootcamp.domain.enums.ExceptionMessages;
 import com.pragma.bootcamps.bootcamp.domain.exceptions.BootcampAlreadyExistsException;
 import com.pragma.bootcamps.bootcamp.domain.exceptions.BootcampCapabilitiesCountException;
+import com.pragma.bootcamps.bootcamp.domain.exceptions.NotFoundException;
 import com.pragma.bootcamps.bootcamp.domain.exceptions.SagaCompensationException;
 import com.pragma.bootcamps.bootcamp.domain.models.Bootcamp;
 import com.pragma.bootcamps.bootcamp.domain.models.BootcampWithCapabilities;
@@ -51,6 +52,13 @@ public class BootcampUseCase implements BootcampServicePort {
                         .collectList()
                         .map(capabilities -> buildBootcampWithCapabilities(bootcamp, capabilities))
                 );
+    }
+
+    public Mono<Void> deleteBootcamp(Long bootcampId) {
+        return bootcampPersistencePort.findBootcampById(bootcampId)
+                .switchIfEmpty(Mono.error(new NotFoundException(ExceptionMessages.BOOTCAMP_NOT_FOUND.format(bootcampId))))
+                .flatMap(bootcamp -> capabilityAssociationClientPort.deleteAssociatedDataByBootcampId(bootcampId)
+                        .then(bootcampPersistencePort.deleteBootcamp(bootcampId)));
     }
 
     private Mono<Bootcamp> validateUniqueName(Bootcamp bootcamp) {

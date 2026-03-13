@@ -9,6 +9,7 @@ public interface BootcampPersistencePort {
     Mono<Bootcamp> saveBootcamp(Bootcamp bootcamp);
     Mono<Void> deleteBootcamp(Long bootcampId);
     Mono<Bootcamp> findBootcampByName(String name);
+    Mono<Bootcamp> findBootcampById(Long bootcampId);
     Flux<Bootcamp> findBootcampsPagedAndSorted(int page, int size, String sortBy, String order);
 
 }
