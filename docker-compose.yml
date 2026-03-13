@@ -1,0 +1,17 @@
+
+services:
+  db-bootcamp:
+    image: postgres:16.1
+    container_name: db-bootcamp
+    volumes:
+      - bootcamp:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: bootcamp
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1234
+    ports:
+      - "5434:5432"
+volumes:
+  bootcamp:
+    external: false
+
