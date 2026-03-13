@@ -19,6 +19,7 @@ import reactor.core.publisher.Mono;
 
 import java.net.URI;
 
+import static com.pragma.bootcamps.bootcamp.infrastructure.entrypoints.reactiveweb.constants.BootcampHandlerLogMessages.*;
 import static com.pragma.bootcamps.bootcamp.infrastructure.entrypoints.reactiveweb.utils.HandlersResponseUtil.buildBodySuccessResponse;
 
 @Slf4j
@@ -32,6 +33,7 @@ public class BootcampHandler {
 
     public Mono<ServerResponse> listenSaveBootcamp(ServerRequest serverRequest) {
         return serverRequest.bodyToMono(BootcampRequest.class)
+                .doOnNext(bootcampRequestDto -> log.info(BOOTCAMP_REQUEST_RECEIVED, bootcampRequestDto))
                 .flatMap(validatorUtil::validate)
                 .map(mapper::toModel)
                 .flatMap(bootcampServicePort::saveBootcamp)
@@ -50,17 +52,26 @@ public class BootcampHandler {
         String sortBy = request.queryParam("sortBy").orElse("name");
         String order = request.queryParam("order").orElse("asc");
 
-        log.info("[HANDLER] listenListBootcamps called with page={}, size={}, sortBy={}, order={}", page, size, sortBy, order);
+        log.info(BOOTCAMP_LIST_REQUEST, page, size, sortBy, order);
 
         return bootcampServicePort.getBootcampsWithCapabilities(page, size, sortBy, order)
                 .map(mapper::toBootcampWithCapabilitiesResponse)
                 .collectList()
-                .doOnNext(dtoList -> log.info("[HANDLER] Bootcamps mapped: {}", dtoList))
+                .doOnNext(dtoList -> log.info(BOOTCAMP_LIST_MAPPED, dtoList))
                 .map(dtoList -> new PageImpl(dtoList, PageRequest.of(page, size), dtoList.size()))
                 .flatMap(pageResult -> ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(buildBodySuccessResponse(ExceptionStatusCode.OK.status(), pageResult))
                 );
+    }
+
+    public Mono<ServerResponse> listenDeleteBootcamp(ServerRequest request) {
+        Long bootcampId = Long.valueOf(request.pathVariable("bootcampId"));
+        log.info(BOOTCAMP_DELETE_REQUEST, bootcampId);
+        return bootcampServicePort.deleteBootcamp(bootcampId)
+                .then(ServerResponse.noContent().build())
+                .doOnSuccess(resp -> log.info("[HANDLER] Bootcamp {} deleted successfully (cascade)", bootcampId))
+                .doOnError(e -> log.error("[HANDLER] Error deleting bootcamp {}: {}", bootcampId, e.getMessage()));
     }
 
 

@@ -27,6 +27,7 @@ routes:
   paths:
     bootcamps: "/api/v1/bootcamps"
     bootcamps-list: "/api/v1/bootcamps/list"
+    delete-bootcamp-by-id: "/api/v1/bootcamps/{bootcampId}"
 
 adapter:
   clients:
