@@ -13,6 +13,8 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -53,5 +55,11 @@ public class BootcampPersistenceAdapter implements BootcampPersistencePort {
                 .flatMapMany(bootcampReactiveRepository::findAllBy)
                 .map(mapper::toDomain)
                 .doOnNext(boc -> log.info("[DB RESULT] bootcamp_id={}, name={}, capabilityCount={}", boc.getId(), boc.getName(), boc.getCapabilityCount()));
+    }
+
+    @Override
+    public Flux<Bootcamp> findAllByIds(List<Long> bootcampIds) {
+        return bootcampReactiveRepository.findAllByIdIn(bootcampIds)
+                .map(mapper::toDomain);
     }
 }
