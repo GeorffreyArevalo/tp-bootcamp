@@ -10,7 +10,7 @@ import com.pragma.bootcamps.bootcamp.domain.exceptions.NotFoundException;
 import com.pragma.bootcamps.bootcamp.domain.exceptions.SagaCompensationException;
 import com.pragma.bootcamps.bootcamp.domain.models.Bootcamp;
 import com.pragma.bootcamps.bootcamp.domain.models.BootcampWithCapabilities;
-import com.pragma.bootcamps.bootcamp.domain.queue.port.QueuePublisher;
+import com.pragma.bootcamps.bootcamp.domain.queue.port.QueuePublisherPort;
 import com.pragma.bootcamps.bootcamp.domain.spi.BootcampPersistencePort;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
@@ -30,7 +30,7 @@ public class BootcampUseCase implements BootcampServicePort {
     private final BootcampPersistencePort bootcampPersistencePort;
     private final CapabilityAssociationClientPort capabilityAssociationClientPort;
     private final TechnologyClientPort technologyClientPort;
-    private final QueuePublisher queuePublisher;
+    private final QueuePublisherPort queuePublisher;
 
     public Mono<Bootcamp> saveBootcamp(Bootcamp bootcamp) {
         bootcamp.setCapabilityCount(bootcamp.getCapabilityIds().size());
