@@ -2,6 +2,13 @@ spring:
   application:
     name: bootcamp
 
+  spring:
+    rabbitmq:
+      host: localhost
+      port: 5672
+      username: bootcamp
+      password: "1234"
+
   r2dbc:
     url: r2dbc:postgresql://localhost:5434/bootcamp
     username: postgres
@@ -22,6 +29,10 @@ springdoc:
 
 server:
   port: 8082
+
+queue:
+  rabbitmq:
+    name-queue: "report.create.bootcamp"
 
 routes:
   paths:
