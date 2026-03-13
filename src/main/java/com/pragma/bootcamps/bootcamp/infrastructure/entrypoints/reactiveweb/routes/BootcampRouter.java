@@ -23,6 +23,7 @@ public class BootcampRouter {
         return route()
                 .POST(bootcampPath.getBootcamps(), handler::listenSaveBootcamp, BootcampOpenApi::saveBootcamp)
                 .GET(bootcampPath.getBootcampsList(), handler::listenListBootcamps, BootcampOpenApi::listBootcamps)
+                .GET(bootcampPath.getValidateConflicts(), handler::listenValidateConflicts, BootcampOpenApi::validateConflicts)
                 .DELETE(bootcampPath.getDeleteBootcampById(), handler::listenDeleteBootcamp, BootcampOpenApi::deleteBootcamp)
                 .build();
     }

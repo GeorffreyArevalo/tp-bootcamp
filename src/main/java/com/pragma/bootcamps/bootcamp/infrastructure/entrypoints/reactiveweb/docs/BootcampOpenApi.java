@@ -2,6 +2,7 @@ package com.pragma.bootcamps.bootcamp.infrastructure.entrypoints.reactiveweb.doc
 
 import com.pragma.bootcamps.bootcamp.infrastructure.entrypoints.reactiveweb.dtos.requests.BootcampRequest;
 import com.pragma.bootcamps.bootcamp.infrastructure.entrypoints.reactiveweb.dtos.responses.BusinessResponse;
+import io.swagger.v3.oas.annotations.enums.Explode;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import lombok.experimental.UtilityClass;
 import org.springdoc.core.fn.builders.operation.Builder;
@@ -35,17 +36,27 @@ public class BootcampOpenApi {
     private static final String DELETE_204_DESC = "No content. Bootcamp and all exclusive associations were deleted successfully. Response body is empty.";
     private static final String DELETE_500_DESC = "Internal server error. The bootcamp or its associations could not be deleted. Response body contains an error message.";
     private static final String DELETE_404_DESC = "Not Found. The bootcamp with the specified ID does not exist. Response body contains an error message.";
+    private static final String VALIDATE_CONFLICTS_200_DESC = "Returns true if there is a conflict, false if there is no conflict.";
+    private static final String VALIDATE_CONFLICTS_400_DESC = "Bad Request. The 'ids' query parameter is missing or empty.";
+    private static final String VALIDATE_CONFLICTS_404_DESC = "Not Found. The bootcamp with the specified ID does not exist. Response body contains an error message.";
+    private static final String VALIDATE_CONFLICTS_500_DESC = "Internal server error. An unexpected error occurred during conflict validation. Response body contains an error message.";
 
     private static final String OPERATION_SAVE = "saveBootcamp";
     private static final String OPERATION_DESC = "Creates a new bootcamp";
     private static final String OPERATION_LIST = "listBootcamps";
     private static final String OPERATION_LIST_DESC = "Lists all bootcamps with pagination and sorting";
     private static final String OPERATION_DELETE = "deleteBootcamp";
+    private static final String OPERATION_VALIDATE_CONFLICTS = "validateConflicts";
+    private static final String OPERATION_VALIDATE_CONFLICTS_DESC = "Validates if enrolling in a new bootcamp would cause a schedule or duration conflict with already enrolled bootcamps. Returns true if there is no conflict, false otherwise.";
 
     private static final String PARAM_PAGE = "page";
     private static final String PARAM_SIZE = "size";
     private static final String PARAM_SORT_BY = "sortBy";
     private static final String PARAM_ORDER = "order";
+    private static final String VALIDATE_CONFLICTS_PARAM_NEW_ID = "id";
+    private static final String VALIDATE_CONFLICTS_PARAM_NEW_ID_DESC = "ID of the new bootcamp to enroll in (path variable).";
+    private static final String VALIDATE_CONFLICTS_PARAM_IDS = "ids";
+    private static final String VALIDATE_CONFLICTS_PARAM_IDS_DESC = "List of already enrolled bootcamp IDs (query parameter, e.g., ?ids=1,2,3). At least one value is required.";
 
     private static final String DEFAULT_PAGE_DESC = "Page number for pagination (default: 0)";
     private static final String DEFAULT_SIZE_DESC = "Page size for pagination (default: 10)";
@@ -55,6 +66,8 @@ public class BootcampOpenApi {
     private static final String DELETE_DESCRIPTION = "Deletes a bootcamp by its ID. This operation is transactional: first, all associations and orphan dependencies are deleted in the capability microservice (capabilities and technologies exclusive to the bootcamp), and only if successful, the bootcamp record is deleted in this service.";
     private static final String DELETE_PARAM_NAME = "bootcampId";
     private static final String DELETE_PARAM_DESC = "Unique identifier of the bootcamp to delete";
+
+    private static final String VALIDATE_CONFLICTS_TRUE = "true";
 
 
     public void saveBootcamp(Builder builder) {
@@ -151,6 +164,58 @@ public class BootcampOpenApi {
                 .response(responseBuilder()
                         .responseCode(NOT_FOUND_CODE)
                         .description(DELETE_404_DESC)
+                        .content(contentBuilder()
+                                .mediaType(MediaType.APPLICATION_JSON_VALUE)
+                                .schema(schemaBuilder().implementation(BusinessResponse.class))
+                        )
+                );
+    }
+
+    public void validateConflicts(Builder builder) {
+        builder
+                .operationId(OPERATION_VALIDATE_CONFLICTS)
+                .description(OPERATION_VALIDATE_CONFLICTS_DESC)
+                .tag(TAG)
+                .parameter(parameterBuilder()
+                        .name(VALIDATE_CONFLICTS_PARAM_NEW_ID)
+                        .description(VALIDATE_CONFLICTS_PARAM_NEW_ID_DESC)
+                        .in(ParameterIn.PATH)
+                        .required(true)
+                )
+                .parameter(parameterBuilder()
+                        .name(VALIDATE_CONFLICTS_PARAM_IDS)
+                        .description(VALIDATE_CONFLICTS_PARAM_IDS_DESC)
+                        .required(true)
+                        .in(ParameterIn.QUERY)
+                        .schema(schemaBuilder()
+                                .type("array")
+                                .implementation(Long.class)
+                        )
+                        .explode(Explode.TRUE)
+                )
+                .response(responseBuilder()
+                        .responseCode(OK_CODE)
+                        .description(VALIDATE_CONFLICTS_200_DESC)
+                        .content(contentBuilder()
+                                .mediaType(MediaType.APPLICATION_JSON_VALUE)
+                                .schema(schemaBuilder().example(VALIDATE_CONFLICTS_TRUE))
+                        )
+                )
+                .response(responseBuilder()
+                        .responseCode(BAD_REQUEST_CODE)
+                        .description(VALIDATE_CONFLICTS_400_DESC)
+                )
+                .response(responseBuilder()
+                        .responseCode(NOT_FOUND_CODE)
+                        .description(VALIDATE_CONFLICTS_404_DESC)
+                        .content(contentBuilder()
+                                .mediaType(MediaType.APPLICATION_JSON_VALUE)
+                                .schema(schemaBuilder().implementation(BusinessResponse.class))
+                        )
+                )
+                .response(responseBuilder()
+                        .responseCode(INTERNAL_ERROR_CODE)
+                        .description(VALIDATE_CONFLICTS_500_DESC)
                         .content(contentBuilder()
                                 .mediaType(MediaType.APPLICATION_JSON_VALUE)
                                 .schema(schemaBuilder().implementation(BusinessResponse.class))

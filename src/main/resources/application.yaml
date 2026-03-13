@@ -28,6 +28,7 @@ routes:
     bootcamps: "/api/v1/bootcamps"
     bootcamps-list: "/api/v1/bootcamps/list"
     delete-bootcamp-by-id: "/api/v1/bootcamps/{bootcampId}"
+    validate-conflicts: "/api/v1/bootcamps/{id}/conflicts"
 
 adapter:
   clients:

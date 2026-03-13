@@ -12,5 +12,6 @@ public class BootcampPath {
     private String bootcamps;
     private String bootcampsList;
     private String deleteBootcampById;
+    private String validateConflicts;
 
 }

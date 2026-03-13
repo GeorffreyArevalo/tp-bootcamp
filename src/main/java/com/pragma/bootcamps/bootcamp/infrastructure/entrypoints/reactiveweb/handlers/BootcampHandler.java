@@ -13,11 +13,13 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
 import java.net.URI;
+import java.util.Collections;
 
 import static com.pragma.bootcamps.bootcamp.infrastructure.entrypoints.reactiveweb.constants.BootcampHandlerLogMessages.*;
 import static com.pragma.bootcamps.bootcamp.infrastructure.entrypoints.reactiveweb.utils.HandlersResponseUtil.buildBodySuccessResponse;
@@ -74,5 +76,20 @@ public class BootcampHandler {
                 .doOnError(e -> log.error("[HANDLER] Error deleting bootcamp {}: {}", bootcampId, e.getMessage()));
     }
 
+
+    public Mono<ServerResponse> listenValidateConflicts(ServerRequest request) {
+        Long newBootcampId = Long.valueOf(request.pathVariable("id"));
+
+        return Mono.justOrEmpty(request.queryParams().get("ids"))
+                .map(ids -> ids.stream()
+                        .filter(StringUtils::hasText)
+                        .map(Long::valueOf)
+                        .toList())
+                .defaultIfEmpty(Collections.emptyList())
+                .flatMap(enrolledIds ->
+                        bootcampServicePort.validateConflicts(newBootcampId, enrolledIds)
+                                .flatMap(isValid -> ServerResponse.ok().bodyValue(isValid))
+                );
+    }
 
 }
